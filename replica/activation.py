@@ -37,11 +37,8 @@ def activate_scope(store: ReplicaStore, inbox: Inbox, envelope: Envelope) -> Sco
     except EnvelopeRejected as error:
         raise ScopeActivationRejected(str(error)) from error
 
-    visible_scope = head.scope
-    if rows:
-        store.replace_rows(envelope.replica_id, rows)
-        visible_scope = scope
-    store.write_head(ReplicaHead(envelope.replica_id, envelope.subscription_id, visible_scope,
+    store.replace_rows(envelope.replica_id, rows)
+    store.write_head(ReplicaHead(envelope.replica_id, envelope.subscription_id, scope,
                                  envelope.scope_version, envelope.position))
     result = requests.complete(request, envelope.position)
     inbox.finish(envelope.envelope_id, 'applied')

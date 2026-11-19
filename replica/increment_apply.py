@@ -57,9 +57,8 @@ def apply_increment(store: ReplicaStore, inbox: Inbox, envelope: Envelope) -> No
             raise EnvelopeRejected('delta has no corresponding pending scope')
         _delta(envelope, request.scope)
         return
-    if envelope.position <= head.position:
+    if envelope.scope_version < head.scope_version or envelope.position <= head.position:
         inbox.finish(envelope.envelope_id, 'retired')
         return
-    scope = head.scope if envelope.scope_version == head.scope_version else None
-    _delta(envelope, scope)
+    _delta(envelope, head.scope)
     drain_contiguous_increments(store, inbox, head)

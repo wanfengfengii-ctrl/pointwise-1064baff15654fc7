@@ -77,11 +77,12 @@ class SubscriptionStore:
         if result.rowcount != 1:
             raise SubscriptionRejected('issuance cursor changed or is not consecutive')
 
-    def set_scope(self, subscription_id: str, prior_version: int, scope: tuple[str, ...]) -> None:
+    def set_scope(self, subscription_id: str, prior_version: int, scope: tuple[str, ...],
+                  cut_position: int) -> None:
         result = self.db.execute('''
-            UPDATE subscriptions SET scope = ?, scope_version = scope_version + 1
+            UPDATE subscriptions SET scope = ?, scope_version = scope_version + 1, cursor = ?
             WHERE subscription_id = ? AND scope_version = ?
-        ''', (json.dumps(scope), subscription_id, prior_version))
+        ''', (json.dumps(scope), cut_position, subscription_id, prior_version))
         if result.rowcount != 1:
             raise SubscriptionRejected('current issuance cannot hand off this scope and position')
 

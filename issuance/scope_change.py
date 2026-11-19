@@ -49,15 +49,13 @@ def issue_scope_change(source: sqlite3.Connection, subscription_id: str, request
             state = subscriptions.get(subscription_id)
             if state.scope_version != prior_version or cut_position > state.cursor:
                 raise ScopeIssuanceRejected('request does not match the prior issued prefix')
-            retained = tuple(section for section in scope if section in state.scope)
-            payload = snapshot_payload_at(source, cut_position, retained)
-            payload['scope'] = list(scope)
+            payload = snapshot_payload_at(source, cut_position, scope)
             payload['request_id'] = request_id
             payload['prior_version'] = prior_version
             envelope = make_envelope(subscription_id, state.replica_id, prior_version + 1,
                                      cut_position, 'cutover', payload)
             Outbox(source).put(envelope)
-            subscriptions.set_scope(subscription_id, prior_version, scope)
+            subscriptions.set_scope(subscription_id, prior_version, scope, cut_position)
             source.execute('''
                 INSERT INTO scope_issuances(subscription_id, request_id, envelope_id)
                 VALUES (?, ?, ?)

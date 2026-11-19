@@ -50,8 +50,7 @@ class Inbox:
                 position: int) -> Envelope | None:
         row = self.db.execute('''
             SELECT body FROM inbox WHERE replica_id = ? AND subscription_id = ?
-            AND scope_version <= ? AND position = ? AND kind = 'delta' AND status = 'waiting'
-            ORDER BY scope_version DESC LIMIT 1
+            AND scope_version = ? AND position = ? AND kind = 'delta' AND status = 'waiting'
         ''', (replica_id, subscription_id, scope_version, position)).fetchone()
         return None if row is None else decode_envelope(row[0])
 
